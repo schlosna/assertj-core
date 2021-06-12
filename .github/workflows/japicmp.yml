@@ -1,0 +1,27 @@
+name: Binary Compatibility
+
+on: push
+#  push:
+#    branches: [ main ]
+
+jobs:
+  japicmp:
+    name: Compare with latest release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      - name: Cache Maven Repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven
+      - name: Compare
+        run: >
+          ./mvnw -V --no-transfer-progress -e package japicmp:cmp
+          -Djapicmp.breakBuildOnBinaryIncompatibleModifications=true
